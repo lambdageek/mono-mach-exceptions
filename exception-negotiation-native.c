@@ -236,19 +236,37 @@ catch_exception_raise (
 )
 {
 	kern_return_t            status;
+#ifdef HOST_I386
 	x86_exception_state32_t  exception_state;
 	mach_msg_type_number_t   exception_state_count = x86_EXCEPTION_STATE32_COUNT;
+#elif defined (HOST_AMD64)
+	x86_exception_state64_t  exception_state;
+	mach_msg_type_number_t   exception_state_count = x86_EXCEPTION_STATE64_COUNT;
+#else
+#error Only x86 or amd64 supported
+#endif
 	char                    *fault_address;
+#ifdef HOST_I386
 	x86_thread_state32_t     thread_state;
 	mach_msg_type_number_t   thread_state_count = x86_THREAD_STATE32_COUNT;
+#elif defined (HOST_AMD64)
+	x86_thread_state64_t     thread_state;
+	mach_msg_type_number_t   thread_state_count = x86_THREAD_STATE64_COUNT;
+#endif
 	void                    *fault_ip;
+
+#ifdef HOST_I386
+	thread_state_flavor_t    flavor = x86_EXCEPTION_STATE32;
+#elif defined (HOST_AMD64)
+	thread_state_flavor_t    flavor = x86_EXCEPTION_STATE64;
+#endif
 
 	if (exception != EXC_BAD_ACCESS)
 		return forward_exception (thread, task, exception, code, code_count);
 
 	status = thread_get_state (
 		thread,
-		x86_EXCEPTION_STATE32,
+		flavor,
 		(natural_t *)&exception_state,
 		&exception_state_count
 	);
@@ -260,12 +278,16 @@ catch_exception_raise (
 
 	status = thread_get_state (
 		thread,
-		x86_THREAD_STATE32,
+		flavor,
 		(natural_t *)&thread_state,
 		&thread_state_count
 	);
 
+#ifdef HOST_I386
 	fault_ip = (void *)thread_state.__eip;
+#elif defined (HOST_AMD64)
+	fault_ip = (void *)thread_state.__rip;
+#endif
 
 	if (handle_exception (fault_address, fault_ip, code [0]))
 		return KERN_SUCCESS;
