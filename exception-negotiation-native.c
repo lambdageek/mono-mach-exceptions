@@ -261,9 +261,11 @@ catch_exception_raise (
 	void                    *fault_ip;
 
 #ifdef HOST_I386
-	thread_state_flavor_t    flavor = x86_EXCEPTION_STATE32;
+	thread_state_flavor_t    exn_flavor = x86_EXCEPTION_STATE32;
+	thread_state_flavor_t    th_flavor = x86_THREAD_STATE32;
 #elif defined (HOST_AMD64)
-	thread_state_flavor_t    flavor = x86_EXCEPTION_STATE64;
+	thread_state_flavor_t    exn_flavor = x86_EXCEPTION_STATE64;
+	thread_state_flavor_t    th_flavor = x86_THREAD_STATE64;
 #endif
 
 	if (exception != EXC_BAD_ACCESS)
@@ -271,7 +273,7 @@ catch_exception_raise (
 
 	status = thread_get_state (
 		thread,
-		flavor,
+		exn_flavor,
 		(natural_t *)&exception_state,
 		&exception_state_count
 	);
@@ -283,7 +285,7 @@ catch_exception_raise (
 
 	status = thread_get_state (
 		thread,
-		flavor,
+		th_flavor,
 		(natural_t *)&thread_state,
 		&thread_state_count
 	);
