@@ -91,6 +91,11 @@ handler_thread (void *unused)
 	void *handle = dlopen (NULL, RTLD_LAZY | RTLD_LOCAL);
 	void (*mono_threads_attach_tools_thread) (void)
 		= dlsym (handle, "mono_threads_attach_tools_thread");
+	if (!mono_threads_attach_tools_thread) {
+		fprintf (stderr, "Could not find symbol %s", "mono_threads_attach_tools_thread");
+		abort ();
+	}
+
 	mono_threads_attach_tools_thread ();
 	dlclose (handle);
 /* END MONO */
